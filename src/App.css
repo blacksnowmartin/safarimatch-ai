@@ -1,11 +1,15 @@
 :root {
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --jungle: #0c1c16;
-  --leaf: #1e5c38;
-  --sun: #f4b942;
-  --sand: #f9f4e2;
-  --ink: #0b0f0d;
-  --card: rgba(255, 255, 255, 0.06);
+  --pink-vivid: #FF42FF;
+  --pink-soft: #FF99F7;
+  --black: #000000;
+  --white: #FFFFFF;
+  --purple-dark: #470144;
+  --blue-light-1: #CEEAFF;
+  --blue-light-2: #E6F0FF;
+  --blue-light-3: #F0F9FF;
+  --gray: #6B7280;
+  --gray-light: #9CA3AF;
 }
 
 *,
@@ -16,8 +20,9 @@
 
 body {
   margin: 0;
-  background: radial-gradient(circle at 20% 20%, rgba(244, 185, 66, 0.2), transparent 50%), var(--jungle);
-  color: var(--sand);
+  background: linear-gradient(135deg, var(--blue-light-3) 0%, var(--blue-light-2) 50%, var(--blue-light-1) 100%);
+  color: var(--black);
+  min-height: 100vh;
 }
 
 .app-shell {
@@ -30,31 +35,37 @@ body {
 .hero {
   border-radius: 28px;
   padding: 2rem;
-  background: linear-gradient(135deg, rgba(30, 92, 56, 0.92), rgba(12, 28, 22, 0.95));
-  border: 1px solid rgba(244, 185, 66, 0.4);
+  background: var(--white);
+  border: 2px solid var(--purple-dark);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 25px 80px rgba(71, 1, 68, 0.3);
 }
 
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.4em;
   font-size: 0.75rem;
-  color: var(--sun);
+  color: var(--pink-vivid);
   margin: 0;
+  font-weight: 700;
 }
 
 .hero h1 {
   margin: 0;
   font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--black);
+  background: linear-gradient(135deg, var(--pink-vivid), var(--pink-soft));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .lede,
 .hint {
   margin: 0;
-  color: rgba(249, 244, 226, 0.8);
+  color: var(--gray);
 }
 
 .btn {
@@ -73,19 +84,24 @@ body {
 }
 
 .primary {
-  background: var(--sun);
-  color: var(--ink);
-  box-shadow: 0 15px 35px rgba(244, 185, 66, 0.35);
+  background: linear-gradient(135deg, var(--pink-vivid), var(--pink-soft));
+  color: var(--white);
+  box-shadow: 0 15px 35px rgba(255, 66, 255, 0.4);
 }
 
 .primary:hover:not(:disabled) {
   transform: translateY(-1px);
+  box-shadow: 0 20px 45px rgba(255, 66, 255, 0.5);
 }
 
 .ghost {
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid var(--purple-dark);
   background: transparent;
-  color: var(--sand);
+  color: var(--black);
+}
+
+.ghost:hover {
+  background: var(--blue-light-1);
 }
 
 .grid {
@@ -95,16 +111,17 @@ body {
 }
 
 .card {
-  background: var(--card);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--white);
+  border: 2px solid var(--purple-dark);
   border-radius: 24px;
   padding: 1.75rem;
-  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(71, 1, 68, 0.15);
 }
 
 .card h2 {
   margin-top: 0;
   margin-bottom: 0.75rem;
+  color: var(--black);
 }
 
 .form {
@@ -118,19 +135,32 @@ label {
   gap: 0.35rem;
   text-transform: capitalize;
   font-weight: 500;
+  color: var(--black);
 }
 
 input {
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 0, 0, 0.25);
-  color: var(--sand);
+  border: 2px solid var(--purple-dark);
+  background: var(--blue-light-3);
+  color: var(--black);
   padding: 0.85rem 1rem;
   font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--pink-vivid);
+  box-shadow: 0 0 0 3px rgba(255, 66, 255, 0.1);
 }
 
 input::placeholder {
-  color: rgba(249, 244, 226, 0.55);
+  color: var(--gray-light);
+}
+
+input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .actions {
@@ -141,7 +171,8 @@ input::placeholder {
 }
 
 .accent {
-  border-color: rgba(244, 185, 66, 0.4);
+  border-color: var(--pink-vivid);
+  box-shadow: 0 10px 30px rgba(255, 66, 255, 0.2);
 }
 
 .match-list {
@@ -156,7 +187,8 @@ input::placeholder {
 .match {
   padding: 1rem;
   border-radius: 18px;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--blue-light-2);
+  border: 2px solid var(--purple-dark);
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -167,11 +199,12 @@ input::placeholder {
   margin: 0;
   font-weight: 600;
   font-size: 1.1rem;
+  color: var(--black);
 }
 
 .meta {
   margin: 0.2rem 0 0;
-  color: rgba(249, 244, 226, 0.75);
+  color: var(--gray);
   font-size: 0.95rem;
 }
 
@@ -185,23 +218,42 @@ input::placeholder {
 .score span {
   font-size: 1.4rem;
   font-weight: 700;
-  color: var(--sun);
+  color: var(--pink-vivid);
 }
 
 .safari-pack {
   text-decoration: none;
   padding: 0.4rem 0.9rem;
   border-radius: 999px;
-  background: rgba(244, 185, 66, 0.15);
-  color: var(--sand);
-  border: 1px solid rgba(244, 185, 66, 0.4);
+  background: linear-gradient(135deg, var(--pink-vivid), var(--pink-soft));
+  color: var(--white);
+  border: 2px solid var(--purple-dark);
   font-size: 0.85rem;
   text-align: center;
+  font-weight: 600;
+  transition: transform 0.2s ease;
+}
+
+.safari-pack:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 15px rgba(255, 66, 255, 0.4);
 }
 
 .future {
-  background: rgba(5, 39, 22, 0.75);
-  border-color: rgba(30, 92, 56, 0.8);
+  background: linear-gradient(135deg, var(--blue-light-1), var(--blue-light-2));
+  border-color: var(--purple-dark);
+}
+
+.future h2 {
+  color: var(--black);
+  background: linear-gradient(135deg, var(--pink-vivid), var(--pink-soft));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.future p {
+  color: var(--gray);
 }
 
 @media (min-width: 900px) {
