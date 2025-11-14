@@ -1,21 +1,19 @@
-export type MockProfile = {
+export interface Profile {
   wallet: string;
   skills: string;
   interests: string;
   location: string;
-};
+}
 
-export const mockProfiles: MockProfile[] = [
-  { wallet: '0xNBO1dA0B71Acar', skills: 'solidity,defi,tokenomics', interests: 'dao,mentoring,governance', location: 'Nairobi, Kenya' },
-  { wallet: '0xLAG05EED91Talent', skills: 'react,node,design', interests: 'ux,dapps,edtech', location: 'Lagos, Nigeria' },
-  { wallet: '0xCPT06FAR203Lion', skills: 'rust,substrate,security', interests: 'zk,research,tooling', location: 'Cape Town, South Africa' },
-  { wallet: '0xACC07RA996Tusks', skills: 'solidity,python,data', interests: 'impact,identity,aid', location: 'Accra, Ghana' },
-  { wallet: '0xDSR08RB101Savanna', skills: 'go,infra,devops', interests: 'rwa,stablecoins,infra', location: 'Dar es Salaam, Tanzania' },
-  { wallet: '0xKGL09IRA778Tusker', skills: 'typescript,nextjs,graph', interests: 'social,community,ai', location: 'Kigali, Rwanda' },
-  { wallet: '0xABJ10AIM541Cheetah', skills: 'solidity,react,testing', interests: 'audit,depin,mentoring', location: 'Abuja, Nigeria' },
-  { wallet: '0xGBR11NBO301Rhino', skills: 'figma,branding,webflow', interests: 'storytelling,nfts,collectives', location: 'Gaborone, Botswana' },
-  { wallet: '0xCAI12ROO661Nomad', skills: 'python,ml,analytics', interests: 'ai,agritech,climate', location: 'Cairo, Egypt' },
-  { wallet: '0xKMP13ALA882Giraffe', skills: 'solana,anchor,react', interests: 'gaming,metaverse,creator', location: 'Kampala, Uganda' },
-  { wallet: '0xLOM14HAR118Buffalo', skills: 'java,kotlin,mobile', interests: 'payments,defi,remittance', location: 'Lomé, Togo' },
-  { wallet: '0xMTN15BLM223Guide', skills: 'product,ops,community', interests: 'mentorship,dao,voting', location: 'Bamako, Mali' }
+export const mockProfiles: Profile[] = [
+  { wallet: '0x1a2b3c...', skills: 'solidity,react,defi', interests: 'rwa,africa,tokenization', location: 'kenya' },
+  { wallet: '0x4d5e6f...', skills: 'design,ux,figma', interests: 'web3,ui,community', location: 'nigeria' },
+  { wallet: '0x7g8h9i...', skills: 'ai,python,machine-learning', interests: 'blockchain,defi,prediction', location: 'south-africa' },
+  { wallet: '0xj0k1l2...', skills: 'solidity,hardhat,foundry', interests: 'layer2,scaling', location: 'ghana' },
+  { wallet: '0xm3n4o5...', skills: 'react,nextjs,web3js', interests: 'dapps,frontend', location: 'ethiopia' },
+  { wallet: '0xp6q7r8...', skills: 'rust,solana,anchor', interests: 'cross-chain,interoperability', location: 'tanzania' },
+  { wallet: '0xs9t0u1...', skills: 'nodejs,express,graphql', interests: 'backend,apis', location: 'uganda' },
+  { wallet: '0xv2w3x4...', skills: 'security,audits,slither', interests: 'smart-contracts,safety', location: 'morocco' },
+  { wallet: '0xy5z6a7...', skills: 'marketing,growth,community', interests: 'web3,adoption', location: 'egypt' },
+  { wallet: '0xb8c9d0...', skills: 'governance,daos,snapshot', interests: 'decentralization,voting', location: 'rwanda' }
 ];

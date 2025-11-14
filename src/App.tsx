@@ -3,10 +3,10 @@ import './App.css';
 import Web3Modal from 'web3modal';
 import { BrowserProvider } from 'ethers';
 import { dot, norm } from 'mathjs';
-import { mockProfiles, MockProfile } from './mockProfiles';
+import { mockProfiles, Profile as MockProfile } from './mockProfiles';
 
-type Profile = { skills: string; interests: string; location: string };
-type StoredProfile = Profile & { wallet: string };
+type DraftProfile = { skills: string; interests: string; location: string };
+type StoredProfile = MockProfile;
 type Match = StoredProfile & { score: number };
 
 const STORAGE_KEY = 'safarimatch_profiles';
@@ -19,8 +19,16 @@ const toVector = (text: string) =>
   });
 
 const cosine = (a: number[], b: number[]) => {
-  if (!a.length || !b.length) return 0;
-  const score = (dot(a, b) as number) / ((norm(a) as number) * (norm(b) as number));
+  const longest = Math.max(a.length, b.length);
+  if (!longest) return 0;
+  const pad = (vec: number[]) =>
+    vec.length === longest ? vec : [...vec, ...Array(longest - vec.length).fill(0)];
+  const paddedA = pad(a);
+  const paddedB = pad(b);
+  const numerator = dot(paddedA, paddedB) as number;
+  const denominator = (norm(paddedA) as number) * (norm(paddedB) as number);
+  if (!denominator) return 0;
+  const score = numerator / denominator;
   return Number.isFinite(score) ? score : 0;
 };
 
@@ -29,7 +37,7 @@ const safariPackLink = (me: string, peer: string) => `${PACK_URL}?user1=${me}&us
 
 function App() {
   const [account, setAccount] = useState<string | null>(null);
-  const [profile, setProfile] = useState<Profile>({ skills: '', interests: '', location: '' });
+  const [profile, setProfile] = useState<DraftProfile>({ skills: '', interests: '', location: '' });
   const [profiles, setProfiles] = useState<StoredProfile[]>(mockProfiles);
   const [matches, setMatches] = useState<Match[]>([]);
   const [connecting, setConnecting] = useState(false);
@@ -107,7 +115,7 @@ function App() {
         <section className="card">
           <h2>Your Builder Profile</h2>
           <div className="form">
-            {(['skills', 'interests', 'location'] as (keyof Profile)[]).map(field => (
+            {(['skills', 'interests', 'location'] as (keyof DraftProfile)[]).map(field => (
               <label key={field}>
                 <span>{field === 'skills' ? 'Skills (comma list)' : field === 'interests' ? 'Interests' : 'Location'}</span>
                 <input
