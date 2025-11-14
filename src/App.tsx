@@ -1,189 +1,163 @@
-import React, { useState } from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 import Web3Modal from 'web3modal';
 import { BrowserProvider } from 'ethers';
 import { dot, norm } from 'mathjs';
-import { mockProfiles } from './mockProfiles';
+import { mockProfiles, MockProfile } from './mockProfiles';
 
-interface Profile {
-  skills: string;
-  interests: string;
-  location: string;
-}
+type Profile = { skills: string; interests: string; location: string };
+type StoredProfile = Profile & { wallet: string };
+type Match = StoredProfile & { score: number };
 
-interface MatchProfile extends Profile {
-  wallet: string;
-  score: number;
-}
+const STORAGE_KEY = 'safarimatch_profiles';
+const PACK_URL = 'https://docs.google.com/document/d/1c8AM5CO7dLW9AbAAYfPxsJKGipphszg8pBsZHlD0vao/edit';
 
-const getVector = (text: string): number[] => {
-  return text.split(',').map(s => s.trim().length);
+const toVector = (text: string) =>
+  text.split(',').map(token => {
+    const len = token.trim().length;
+    return len === 0 ? 1 : len;
+  });
+
+const cosine = (a: number[], b: number[]) => {
+  if (!a.length || !b.length) return 0;
+  const score = (dot(a, b) as number) / ((norm(a) as number) * (norm(b) as number));
+  return Number.isFinite(score) ? score : 0;
 };
 
-const cosineSimilarity = (vecA: number[], vecB: number[]): number => {
-  const dotProduct = dot(vecA, vecB) as number;
-  const normA = norm(vecA) as number;
-  const normB = norm(vecB) as number;
-  return dotProduct / (normA * normB);
-};
-
-const findMatches = (userProfile: Profile): MatchProfile[] => {
-  const userVec = getVector(userProfile.skills + ',' + userProfile.interests);
-  return mockProfiles
-    .map((p: Profile & { wallet: string }) => ({
-      ...p,
-      score: cosineSimilarity(userVec, getVector(p.skills + ',' + p.interests))
-    }))
-    .sort((a: MatchProfile, b: MatchProfile) => b.score - a.score)
-    .slice(0, 3);
-};
+const short = (addr: string) => `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+const safariPackLink = (me: string, peer: string) => `${PACK_URL}?user1=${me}&user2=${peer}`;
 
 function App() {
   const [account, setAccount] = useState<string | null>(null);
-  const [profile, setProfile] = useState<Profile>({
-    skills: '',
-    interests: '',
-    location: ''
-  });
-  const [matches, setMatches] = useState<MatchProfile[]>([]);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [profile, setProfile] = useState<Profile>({ skills: '', interests: '', location: '' });
+  const [profiles, setProfiles] = useState<StoredProfile[]>(mockProfiles);
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [connecting, setConnecting] = useState(false);
+  const [loadingMatches, setLoadingMatches] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setProfiles(JSON.parse(saved));
+    } catch {
+      setProfiles(mockProfiles);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+  }, [profiles]);
 
   const connectWallet = async () => {
     try {
-      setIsConnecting(true);
+      setConnecting(true);
       const web3Modal = new Web3Modal({ network: 'mainnet', cacheProvider: true });
       const instance = await web3Modal.connect();
       const provider = new BrowserProvider(instance);
       const signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      setAccount(address);
-    } catch (error) {
-      console.error('Error connecting wallet:', error);
+      setAccount(await signer.getAddress());
+    } catch (err) {
+      console.error('wallet error', err);
     } finally {
-      setIsConnecting(false);
+      setConnecting(false);
     }
   };
 
-  const handleSubmit = () => {
-    const foundMatches = findMatches(profile);
-    setMatches(foundMatches);
+  const rankMatches = (source: StoredProfile, pool: StoredProfile[]) => {
+    const sourceVec = toVector(`${source.skills},${source.interests}`);
+    return pool
+      .map(p => ({
+        ...p,
+        score: cosine(sourceVec, toVector(`${p.skills},${p.interests}`))
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
   };
 
+  const handleSubmit = () => {
+    if (!account) return;
+    setLoadingMatches(true);
+    setTimeout(() => {
+      setProfiles(prev => {
+        const updated = [...prev.filter(p => p.wallet !== account), { ...profile, wallet: account }];
+        setMatches(rankMatches({ ...profile, wallet: account }, updated.filter(p => p.wallet !== account)));
+        setLoadingMatches(false);
+        return updated;
+      });
+    }, 150);
+  };
+
+  const resetMatches = () => setMatches([]);
+
   return (
-    <div className="App">
+    <div className="app-shell">
       <header className="hero">
-        <div className="hero__content">
-          <img src={logo} className="hero__logo" alt="SafariMatch logo" />
-          <div>
-            <p className="eyebrow">Web3 Talent Graph · Africa</p>
-            <h1>SafariMatch AI</h1>
-            <p className="subtitle">
-              Connect your wallet, share your skills, and let our matching engine surface collaborators,
-              investors, and opportunities across the continent.
-            </p>
-            <div className="hero__actions">
-              <button
-                className="btn btn-primary"
-                onClick={connectWallet}
-                disabled={isConnecting}
-              >
-                {account ? 'Reconnect Wallet' : isConnecting ? 'Connecting…' : 'Connect Wallet'}
-              </button>
-              <button
-                className="btn btn-ghost"
-                onClick={() => window.open('https://reactjs.org', '_blank')}
-              >
-                Learn More
-              </button>
-            </div>
-          </div>
+        <div>
+          <p className="eyebrow">SafariMatch AI</p>
+          <h1>Match with builders blazing the savanna.</h1>
+          <p className="lede">Share your stack, vibe, and city to discover the top 3 hackers or mentors you should DM next.</p>
         </div>
-        <div className="hero__status">
-          {account ? (
-            <>
-              <p className="status-label">Connected Wallet</p>
-              <p className="status-value">{account.slice(0, 6)}…{account.slice(-4)}</p>
-              <p className="status-hint">Complete your builder profile to discover DAO-ready matches.</p>
-            </>
-          ) : (
-            <>
-              <p className="status-label">Wallet not connected</p>
-              <p className="status-hint">Tap the button above to authenticate with your preferred wallet.</p>
-            </>
-          )}
-        </div>
+        <button className="btn primary" onClick={connectWallet} disabled={connecting}>
+          {account ? 'Reconnect Wallet' : connecting ? 'Connecting…' : 'Connect Wallet'}
+        </button>
+        <p className="hint">{account ? `Connected: ${short(account)}` : 'No wallet connected yet.'}</p>
       </header>
 
-      <main className="dashboard">
-        <section className="panel profile-panel">
-          <div className="panel__header">
-            <h2>Builder Profile</h2>
-            <p>Share the skills and focus areas you want collaborators to see.</p>
+      <main className="grid">
+        <section className="card">
+          <h2>Your Builder Profile</h2>
+          <div className="form">
+            {(['skills', 'interests', 'location'] as (keyof Profile)[]).map(field => (
+              <label key={field}>
+                <span>{field === 'skills' ? 'Skills (comma list)' : field === 'interests' ? 'Interests' : 'Location'}</span>
+                <input
+                  placeholder={field === 'location' ? 'Nairobi, Lagos…' : 'react, solidity, climate'}
+                  value={profile[field]}
+                  disabled={!account}
+                  onChange={e => setProfile({ ...profile, [field]: e.target.value })}
+                />
+              </label>
+            ))}
           </div>
-          <div className="form-grid">
-            <label>
-              <span>Skills</span>
-              <input
-                placeholder="react, solidity, growth"
-                value={profile.skills}
-                disabled={!account}
-                onChange={e => setProfile({ ...profile, skills: e.target.value })}
-              />
-            </label>
-            <label>
-              <span>Interests</span>
-              <input
-                placeholder="defi, climate, payments"
-                value={profile.interests}
-                disabled={!account}
-                onChange={e => setProfile({ ...profile, interests: e.target.value })}
-              />
-            </label>
-            <label>
-              <span>Location</span>
-              <input
-                placeholder="Nairobi, Lagos, Accra…"
-                value={profile.location}
-                disabled={!account}
-                onChange={e => setProfile({ ...profile, location: e.target.value })}
-              />
-            </label>
+          <div className="actions">
+            <button className="btn primary" disabled={!account || !profile.skills || !profile.interests || loadingMatches} onClick={handleSubmit}>
+              {loadingMatches ? 'Scouting…' : 'Find Matches'}
+            </button>
+            <button className="btn ghost" onClick={resetMatches}>Reset Matches</button>
           </div>
-          <button
-            className="btn btn-primary btn-block"
-            onClick={handleSubmit}
-            disabled={!account || !profile.skills || !profile.interests}
-          >
-            Generate Matches
-          </button>
-          {!account && <p className="panel__hint">Connect your wallet to unlock profile editing.</p>}
         </section>
 
-        <section className="panel matches-panel">
-          <div className="panel__header">
-            <h2>Top Matches</h2>
-            <p>Ranked using cosine similarity on your skills and interests.</p>
-          </div>
+        <section className="card accent">
+          <h2>Top Safari Allies</h2>
           {matches.length === 0 ? (
-            <div className="empty-state">
-              <p>{account ? 'Share your profile details to see recommended builders.' : 'Connect your wallet to preview recommendations.'}</p>
-            </div>
+            <p className="hint">{account ? 'Fill in your profile to unlock recommendations.' : 'Connect a wallet to start scouting.'}</p>
           ) : (
-            <ul className="matches-list">
+            <ul className="match-list">
               {matches.map(match => (
-                <li key={match.wallet} className="match-card">
+                <li key={match.wallet} className="match">
                   <div>
-                    <p className="match-wallet">{match.wallet}</p>
-                    <p className="match-meta">
-                      {match.location} · {match.skills}
-                    </p>
+                    <p className="wallet">{short(match.wallet)}</p>
+                    <p className="meta">{match.location} · {match.skills}</p>
+                    <p className="meta">Interests: {match.interests}</p>
                   </div>
-                  <span className="match-score">{match.score.toFixed(2)}</span>
+                  <div className="score">
+                    <span>{match.score.toFixed(2)}</span>
+                    {account && (
+                      <a className="btn safari-pack" href={safariPackLink(account, match.wallet)} target="_blank" rel="noreferrer">
+                        Safari Pack
+                      </a>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
           )}
+        </section>
+
+        <section className="card future">
+          <h2>Bold Future</h2>
+          <p>Every match can evolve into a Safari Pack NFT—mint it to unlock co-ownership rewards, DAO voting credits, and shared bounties tied to your collab streak.</p>
+          <p>Ship together, redeem tusk points, and let the savanna decide who leads the next expedition.</p>
         </section>
       </main>
     </div>
