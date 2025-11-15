@@ -123,11 +123,17 @@ A client-side, wallet-first platform that:
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/blacksnowmartin/safarimatch-ai
 cd safarimatch-ai
 
 # Install dependencies
 npm install
+
+# Dependecy for web3 wallet connect
+npm install ethers web3modal @walletconnect/web3-provider
+
+# Dependecy for cosine similarity
+npm install mathjs
 
 # Start development server
 npm start
@@ -228,9 +234,14 @@ This project was built for the ETH Safari Evolution Challenge hackathon.
 
 ## 📞 Contact & Demo
 
-- **Live Demo**: [Add your deployment URL]
-- **Hackathon Submission**: [Add submission link]
-- **Team**: [Add team members]
+- **Live Demo**: [https://safarimatch-ai.vercel.app/]
+- **Hackathon Submission**: [https://dorahacks.io/buidl/36431]
+- **Team**:
+
+### Martin Kitonga
+### Mark Matakili
+### Oliver Kandagor
+
 
 ---
 
