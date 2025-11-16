@@ -195,11 +195,23 @@ input:disabled {
   flex-wrap: wrap;
 }
 
-.wallet {
-  margin: 0;
-  font-weight: 600;
-  font-size: 1.1rem;
+.username {
+  margin: 0 0 0.25rem;
+  font-weight: 700;
+  font-size: 1.3rem;
   color: var(--black);
+  background: linear-gradient(135deg, var(--pink-vivid), var(--pink-soft));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.wallet {
+  margin: 0 0 0.5rem;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--gray);
+  font-family: 'Courier New', monospace;
 }
 
 .meta {

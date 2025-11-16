@@ -5,7 +5,7 @@ import { BrowserProvider } from 'ethers';
 import { dot, norm } from 'mathjs';
 import { mockProfiles, Profile as MockProfile } from './mockProfiles';
 
-type DraftProfile = { skills: string; interests: string; location: string };
+type DraftProfile = { username: string; skills: string; interests: string; location: string };
 type StoredProfile = MockProfile;
 type Match = StoredProfile & { score: number };
 
@@ -37,24 +37,62 @@ const safariPackLink = (me: string, peer: string) => `${PACK_URL}?user1=${me}&us
 
 function App() {
   const [account, setAccount] = useState<string | null>(null);
-  const [profile, setProfile] = useState<DraftProfile>({ skills: '', interests: '', location: '' });
+  const [profile, setProfile] = useState<DraftProfile>({ username: '', skills: '', interests: '', location: '' });
   const [profiles, setProfiles] = useState<StoredProfile[]>(mockProfiles);
   const [matches, setMatches] = useState<Match[]>([]);
   const [connecting, setConnecting] = useState(false);
   const [loadingMatches, setLoadingMatches] = useState(false);
 
+  // Migrate old profiles to include username field
+  const migrateProfiles = (profiles: any[]): StoredProfile[] => {
+    return profiles.map(p => ({
+      ...p,
+      username: p.username || `Builder_${p.wallet.slice(2, 8)}`
+    }));
+  };
+
+  // Load profiles from localStorage on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setProfiles(JSON.parse(saved));
-    } catch {
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Migrate old profiles that might not have username
+        const migrated = migrateProfiles(parsed);
+        setProfiles(migrated);
+      }
+    } catch (err) {
+      console.error('Error loading profiles:', err);
       setProfiles(mockProfiles);
     }
   }, []);
 
+  // Save profiles to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
+    } catch (err) {
+      console.error('Error saving profiles:', err);
+    }
   }, [profiles]);
+
+  // Load existing profile when wallet connects
+  useEffect(() => {
+    if (account) {
+      const existing = profiles.find(p => p.wallet.toLowerCase() === account.toLowerCase());
+      if (existing) {
+        setProfile({
+          username: existing.username || '',
+          skills: existing.skills || '',
+          interests: existing.interests || '',
+          location: existing.location || ''
+        });
+      } else {
+        // Reset to empty if no existing profile
+        setProfile({ username: '', skills: '', interests: '', location: '' });
+      }
+    }
+  }, [account, profiles]);
 
   const connectWallet = async () => {
     try {
@@ -83,12 +121,17 @@ function App() {
   };
 
   const handleSubmit = () => {
-    if (!account) return;
+    if (!account || !profile.username.trim()) return;
     setLoadingMatches(true);
     setTimeout(() => {
       setProfiles(prev => {
-        const updated = [...prev.filter(p => p.wallet !== account), { ...profile, wallet: account }];
-        setMatches(rankMatches({ ...profile, wallet: account }, updated.filter(p => p.wallet !== account)));
+        const newProfile: StoredProfile = { 
+          ...profile, 
+          wallet: account,
+          username: profile.username.trim() || `Builder_${account.slice(2, 8)}`
+        };
+        const updated = [...prev.filter(p => p.wallet.toLowerCase() !== account.toLowerCase()), newProfile];
+        setMatches(rankMatches(newProfile, updated.filter(p => p.wallet.toLowerCase() !== account.toLowerCase())));
         setLoadingMatches(false);
         return updated;
       });
@@ -115,6 +158,16 @@ function App() {
         <section className="card">
           <h2>Your Builder Profile</h2>
           <div className="form">
+            <label>
+              <span>Username *</span>
+              <input
+                placeholder="Choose your builder username"
+                value={profile.username}
+                disabled={!account}
+                onChange={e => setProfile({ ...profile, username: e.target.value })}
+                maxLength={30}
+              />
+            </label>
             {(['skills', 'interests', 'location'] as (keyof DraftProfile)[]).map(field => (
               <label key={field}>
                 <span>{field === 'skills' ? 'Skills (comma list)' : field === 'interests' ? 'Interests' : 'Location'}</span>
@@ -128,11 +181,16 @@ function App() {
             ))}
           </div>
           <div className="actions">
-            <button className="btn primary" disabled={!account || !profile.skills || !profile.interests || loadingMatches} onClick={handleSubmit}>
+            <button className="btn primary" disabled={!account || !profile.username.trim() || !profile.skills || !profile.interests || loadingMatches} onClick={handleSubmit}>
               {loadingMatches ? 'Scouting…' : 'Find Matches'}
             </button>
             <button className="btn ghost" onClick={resetMatches}>Reset Matches</button>
           </div>
+          {account && (
+            <p className="hint" style={{ marginTop: '1rem', fontSize: '0.9rem' }}>
+              Your profile is saved locally and will persist across sessions.
+            </p>
+          )}
         </section>
 
         <section className="card accent">
@@ -144,6 +202,7 @@ function App() {
               {matches.map(match => (
                 <li key={match.wallet} className="match">
                   <div>
+                    <p className="username">{match.username || 'Anonymous Builder'}</p>
                     <p className="wallet">{short(match.wallet)}</p>
                     <p className="meta">{match.location} · {match.skills}</p>
                     <p className="meta">Interests: {match.interests}</p>
