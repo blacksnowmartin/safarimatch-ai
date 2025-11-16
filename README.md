@@ -238,9 +238,10 @@ This project was built for the ETH Safari Evolution Challenge hackathon.
 - **Hackathon Submission**: [https://dorahacks.io/buidl/36431]
 - **Team**:
 
-### Martin Kitonga
-### Mark Matakili
-### Oliver Kandagor
+### Martin Kitonga Web 3 Developer
+### Salma Bakari AI Framework Strategist
+### Mark Matakili Smart Contract Auditing
+### Oliver Kandagor UI & UX 
 
 
 ---
